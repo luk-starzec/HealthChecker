@@ -1,0 +1,77 @@
+﻿@using HealthDashboard.Web.Interfaces
+@using HealthDashboard.Web.ViewModel
+
+@inject IHistoryService _historyService;
+
+<div class=@wrapperCss>
+
+    @if (!string.IsNullOrEmpty(Item.LastCheckText))
+    {
+        <span class="item__label item__label--last-check" title="@lastCheckTooltip">
+            @Item.LastCheckText
+        </span>
+    }
+
+    @if (Item.IsChecking || !Item.IsInitialized)
+    {
+        <div class="item__loading-icon">
+            <SvgIcon SvgUrl="/assets/loading_icon.svg" />
+        </div>
+    }
+    else
+    {
+        <button class="button  item__button--refresh" @onclick="Refresh" title="Refresh">
+            <SvgIcon SvgUrl="/assets/refresh_icon.svg" />
+        </button>
+    }
+
+    <h3 class="item__header">@Item.Label</h3>
+
+    @if (lastHealthyVisible)
+    {
+        <div class="item__label item__label--last-healthy" title="@lastHealthyTooltip">
+            <SvgIcon SvgUrl="/assets/check_icon.svg" />
+            @Item.LastHealthyText
+        </div>
+    }
+
+    <button class="button item__button--details" @onclick="ShowDetails" title="Show details">
+        <SvgIcon SvgUrl="/assets/logs_icon.svg" />
+    </button>
+</div>
+
+@if (historyVisible)
+{
+    <HistoryView Label="@Item.Label" Logs="@itemLogs" Close="()=>historyVisible=false" />
+}
+
+@code {
+    [Parameter]
+    public required ItemViewModel Item { get; set; }
+
+    [Parameter]
+    public EventCallback<string> RefreshItem { get; set; }
+
+    string wrapperCss => Item.IsInitialized ?
+        (Item.IsHealthy ? "item__wrapper item__wrapper--healthy" : "item__wrapper item__wrapper--unhealthy")
+        : "item__wrapper";
+
+    string lastCheckTooltip => $"Last check: {Item.LastCheck}";
+
+    bool lastHealthyVisible => !string.IsNullOrEmpty(Item.LastHealthyText) && !Item.IsHealthy;
+    string lastHealthyTooltip => $"Last healthy: {Item.LastHealthy}";
+
+    bool historyVisible;
+    Dictionary<DateTime, bool> itemLogs = new Dictionary<DateTime, bool>();
+
+    async Task Refresh()
+    {
+        await RefreshItem.InvokeAsync(Item.Name);
+    }
+
+    void ShowDetails()
+    {
+        historyVisible = true;
+        itemLogs = _historyService.GetLogs(Item.Name);
+    }
+}

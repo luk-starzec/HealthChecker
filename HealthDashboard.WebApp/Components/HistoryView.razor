@@ -1,0 +1,45 @@
+﻿
+<div class="history__wrapper">
+
+    <div class="history__box">
+
+        <h3 class="history__header">@Label logs</h3>
+
+        <button class="history__close-button" @onclick="Close">
+            <SvgIcon SvgUrl="/assets/close_icon.svg" />
+        </button>
+
+        <table class="history__table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Logs.OrderByDescending(r => r.Key))
+                {
+                    <tr>
+                        <td class="@GetStatusCss(log.Value)">@log.Key</td>
+                        <td class="@GetStatusCss(log.Value)"> @GetStatusText(log.Value)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public required string Label { get; set; }
+
+    [Parameter]
+    public Dictionary<DateTime, bool> Logs { get; set; } = new Dictionary<DateTime, bool>();
+
+    [Parameter]
+    public EventCallback Close { get; set; }
+
+    string GetStatusText(bool isHealthy) => isHealthy ? "OK" : "Failed";
+    string GetStatusCss(bool isHealthy) => isHealthy ? "history__status-ok" : "history__status-failed";
+}
