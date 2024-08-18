@@ -1,4 +1,3 @@
-using HealthDashboard.WebApp.Data;
 using HealthDashboard.WebApp.Interfaces;
 using HealthDashboard.WebApp.Services;
 using Microsoft.AspNetCore.Components;
@@ -8,10 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpClient();
-
 builder.Services.AddScoped(s => new HttpClient { BaseAddress = new Uri(s.GetRequiredService<NavigationManager>().BaseUri) });
-
-builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddScoped<IApiHealthService, ApiHealthService>();
 builder.Services.AddScoped<IGrpcHealthService, GrpcHealthService>();

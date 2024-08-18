@@ -1,4 +1,7 @@
-﻿@using HealthDashboard.WebApp.ViewModels
+﻿@using HealthDashboard.WebApp.Interfaces
+@using HealthDashboard.WebApp.ViewModels
+
+@inject IItemService _itemService;
 
 <div class="group__wrapper">
 
@@ -12,7 +15,7 @@
         @foreach (var item in sortedItems)
         {
             <li class="group__list-item">
-                <ItemView Item="@item" RefreshItem="RefreshItem" />
+                <ItemView Item="@item" />
             </li>
         }
 
@@ -24,16 +27,17 @@
     [Parameter]
     public required GroupViewModel Group { get; set; }
 
-    [Parameter]
-    public EventCallback<string> RefreshGroup { get; set; }
-
-    [Parameter]
-    public EventCallback<string> RefreshItem { get; set; }
-
-    private ItemViewModel[] sortedItems => Group.Items.OrderBy(r => r.Order).ToArray();
+    ItemViewModel[] sortedItems => Group.Items.OrderBy(r => r.Order).ToArray();
 
     async Task Refresh()
     {
-        await RefreshGroup.InvokeAsync(Group.Name);
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
+        await Parallel.ForEachAsync(Group.Items, options, async (i, _) => await UpdateItem(i));
     }
+
+    private async Task UpdateItem(ItemViewModel item)
+    {
+        await InvokeAsync(async () => { await _itemService.UpdateHealthAsync(item); });
+    }
+
 }

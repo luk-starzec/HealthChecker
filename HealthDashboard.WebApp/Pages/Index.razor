@@ -13,7 +13,7 @@
         @foreach (var group in groups)
         {
             <li>
-                <GroupView Group="@group" RefreshGroup="RefreshGroup" RefreshItem="RefreshItem" />
+                <GroupView Group="@group" />
             </li>
         }
     </ul>
@@ -63,7 +63,7 @@
 @code {
     GroupViewModel[] groups = [];
 
-    Timer timer;
+    Timer timer = new Timer();
 
     int RefreshInterval
     {
@@ -79,19 +79,19 @@
     string settingsIcon => settingsVisible ? "/assets/right_arrow_icon.svg" : "/assets/menu_icon.svg";
     string settingsTooltip => settingsVisible ? "Hide settings" : "Show settings";
 
-    public Index()
-    {
-        timer = new Timer
-            {
-                Interval = 10_000,
-                AutoReset = true,
-            };
-        timer.Elapsed += OnTimerTick;
-    }
-
     protected override async Task OnInitializedAsync()
     {
+        timer.Interval = 10_000;
+        timer.AutoReset = true;
+        timer.Elapsed += OnTimerTick;
+
         groups = await _itemService.GetGroupsAsync();
+
+        var items = groups.SelectMany(r => r.Items);
+        foreach (var item in items)
+        {
+            _itemService.InitItemFromHistory(item);
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -103,36 +103,11 @@
         }
     }
 
-    private async Task RefreshItem(string itemName)
-    {
-        var item = groups.SelectMany(r => r.Items).Single(r => r.Name == itemName);
-
-        await UpdateItem(item);
-    }
-
-    private async Task RefreshGroup(string groupName)
-    {
-        var group = groups.Single(r => r.Name == groupName);
-
-        foreach (var item in group.Items)
-        {
-            await UpdateItem(item);
-        }
-
-        // var options = new ParallelOptions { MaxDegreeOfParallelism = 3 };
-        // await Parallel.ForEachAsync(group.Items, options, async (i, _) => await UpdateItem(i));
-    }
-
     private async Task RefreshAll()
     {
         var items = groups.SelectMany(r => r.Items);
 
-        // foreach (var item in items)
-        // {
-        //     await UpdateItem(item);
-        // }
-
-        var options = new ParallelOptions { MaxDegreeOfParallelism = 5 };
+        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
         await Parallel.ForEachAsync(items, options, async (i, _) => await UpdateItem(i));
 
         if (timer.Enabled)
@@ -141,18 +116,15 @@
             timer.Start();
         }
     }
+
     private async Task UpdateItem(ItemViewModel item)
     {
-        await InvokeAsync(async () =>
-        {
-            await _itemService.UpdateHealthAsync(item);
-            StateHasChanged();
-        });
+        await InvokeAsync(async () => { await _itemService.UpdateHealthAsync(item); });
     }
 
     private void OnTimerTick(object? source, ElapsedEventArgs e)
     {
-        Task.Run(async () => await RefreshAll());
+        InvokeAsync(async () => await RefreshAll());
     }
 
 }

@@ -9,7 +9,6 @@ public class ItemViewModel
     public ServiceType Type { get; set; }
     public bool IsHealthy { get; set; }
     public bool IsChecking { get; set; }
-    public bool IsInitialized { get; set; }
     public DateTime? LastCheck { get; set; }
     public DateTime? LastHealthy { get; set; }
 

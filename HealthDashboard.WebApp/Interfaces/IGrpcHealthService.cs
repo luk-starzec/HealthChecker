@@ -1,4 +1,6 @@
 ﻿namespace HealthDashboard.WebApp.Interfaces;
 
-public interface IGrpcHealthService : IHealthServiceBase
-{ }
+public interface IGrpcHealthService
+{
+    Task<bool> CheckHealthAsync(string address);
+}

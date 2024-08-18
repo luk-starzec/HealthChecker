@@ -273,7 +273,7 @@ html, body {
     z-index: 100;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: start;
     background: hsla(0, 0%, 10%, 90%);
 }
 
@@ -282,6 +282,7 @@ html, body {
     grid-template-columns: 1fr auto;
     background: var(--main-background);
     color: var(--secondary-color);
+    margin-top: 10vh;
 }
 
 .history__header {
@@ -319,15 +320,17 @@ html, body {
     }
 
     .history__table th {
-        padding: .5rem 3.25rem;
-        text-align: center;
+        padding: .5rem 5rem .5rem 0;
         width: 100%;
+        text-align: center;
         background: var(--dark-color);
     }
 
     .history__table td {
-        padding: .5rem 3rem;
+        padding: .5rem 0;
         text-align: center;
+        width: 12rem;
+        border-bottom: 1px solid var(--primary-background);
     }
 
 .history__status-ok {

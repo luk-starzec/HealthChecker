@@ -1,24 +1,24 @@
 [
   {
     "Name": "TestGroup1",
-    "Label": "Test group 1",
+    "Label": "Test services 1",
     "Order": 1,
     "Items": [
       {
-        "Name": "Item1",
-        "Label": "Item 1",
+        "Name": "api1",
+        "Label": "API service 1",
         "Type": 1,
         "Address": "https://localhost:7001/hc"
       },
       {
-        "Name": "Item2",
-        "Label": "Item 2",
+        "Name": "grpc1",
+        "Label": "gRPC service",
         "Type": 2,
         "Address": "https://localhost:8001"
       },
       {
-        "Name": "Item3",
-        "Label": "Item 3",
+        "Name": "wcf1",
+        "Label": "WCF Service 1",
         "Type": 3,
         "Address": "net.tcp://localhost:9001/TestService/hc"
       }
@@ -33,19 +33,19 @@
         "Name": "Item21",
         "Label": "Item 21",
         "Type": 1,
-        "Address": "https://localhost:7001/hc"
+        "Address": "https://localhost:7011/hc"
       },
       {
         "Name": "Item22",
         "Label": "Item 22",
         "Type": 1,
-        "Address": "https://localhost:7001/hc"
+        "Address": "https://localhost:7021/hc"
       },
       {
         "Name": "Item23",
         "Label": "Item 23",
         "Type": 1,
-        "Address": "https://localhost:7001/hc"
+        "Address": "https://localhost:7031/hc"
       }
     ]
   }

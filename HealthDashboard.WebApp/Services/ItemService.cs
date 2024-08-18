@@ -1,6 +1,5 @@
 ﻿using HealthDashboard.WebApp.Interfaces;
 using HealthDashboard.WebApp.ViewModels;
-using Microsoft.AspNetCore.Components;
 
 namespace HealthDashboard.WebApp.Services;
 
@@ -25,6 +24,8 @@ public class ItemService : IItemService
         _httpClient = httpClient;
     }
 
+    public EventHandler<ItemViewModel>? ItemUpdated { get; set; }
+
     public async Task<GroupViewModel[]> GetGroupsAsync()
     {
         var groups = await _httpClient.GetFromJsonAsync<GroupViewModel[]>("data/items.json");
@@ -35,11 +36,32 @@ public class ItemService : IItemService
         return groups;
     }
 
+    public void InitItemFromHistory(ItemViewModel item)
+    {
+        var logs = _historyService.GetLogs(item.Name);
+
+        if (!logs.Any())
+            return;
+
+        var last = logs.OrderByDescending(r => r.Key).First();
+        item.IsHealthy = last.Value;
+        item.LastCheck = last.Key;
+
+        if (logs.Where(r => r.Value).Any())
+        {
+            var lastHealthy = logs.Where(r => r.Value).OrderByDescending(r => r.Key).First();
+            item.LastHealthy = lastHealthy.Key;
+        }
+    }
+
     public async Task UpdateHealthAsync(ItemViewModel item)
     {
         item.IsChecking = true;
+        ItemUpdated?.Invoke(null, item);
 
         var time = DateTime.Now;
+
+        await Task.Delay(2000);
 
         if (_isDemoMode)
         {
@@ -51,14 +73,12 @@ public class ItemService : IItemService
             item.IsHealthy = await GetHealthAsync(item.Type, item.Address);
         }
 
-        Thread.Sleep(1000);
-
-        item.IsInitialized = true;
         item.LastCheck = time;
         if (item.IsHealthy)
             item.LastHealthy = time;
 
         item.IsChecking = false;
+        ItemUpdated?.Invoke(null, item);
 
         _historyService.AddLog(item.Name, time, item.IsHealthy);
     }
