@@ -4,6 +4,7 @@
 @using HealthDashboard.WebApp.Components
 @using HealthDashboard.WebApp.ViewModels
 @using System.Timers
+@implements IDisposable
 
 @inject IItemService _itemService;
 
@@ -86,12 +87,6 @@
         timer.Elapsed += OnTimerTick;
 
         groups = await _itemService.GetGroupsAsync();
-
-        var items = groups.SelectMany(r => r.Items);
-        foreach (var item in items)
-        {
-            _itemService.InitItemFromHistory(item);
-        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -103,12 +98,22 @@
         }
     }
 
+    void IDisposable.Dispose()
+    {
+        timer.Dispose();
+    }
+
     private async Task RefreshAll()
     {
         var items = groups.SelectMany(r => r.Items);
 
         var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
-        await Parallel.ForEachAsync(items, options, async (i, _) => await UpdateItem(i));
+        await Parallel.ForEachAsync(
+            items,
+            options,
+            async (item, _) =>
+                await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint))
+        );
 
         if (timer.Enabled)
         {
@@ -117,9 +122,9 @@
         }
     }
 
-    private async Task UpdateItem(ItemViewModel item)
+    private async Task UpdateHealth(ItemViewModel item)
     {
-        await InvokeAsync(async () => { await _itemService.UpdateHealthAsync(item); });
+        await InvokeAsync(async () => { await _itemService.CheckHealthAsync(item.Name, item.Endpoint); });
     }
 
     private void OnTimerTick(object? source, ElapsedEventArgs e)

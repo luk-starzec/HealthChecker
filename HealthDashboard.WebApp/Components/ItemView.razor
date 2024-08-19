@@ -1,19 +1,20 @@
 ﻿@using HealthDashboard.WebApp.Interfaces
 @using HealthDashboard.WebApp.ViewModels
+@implements IDisposable
 
 @inject IItemService _itemService;
 @inject IHistoryService _historyService;
 
 <div class=@wrapperCss>
 
-    @if (!string.IsNullOrEmpty(Item.LastCheckText))
+    @if (lastCheckVisible)
     {
         <span class="item__label item__label--last-check" title="@lastCheckTooltip">
-            @Item.LastCheckText
+            @lastCheckText
         </span>
     }
 
-    @if (Item.IsChecking)
+    @if (isChecking)
     {
         <div class="item__loading-icon">
             <SvgIcon SvgUrl="/assets/loading_icon.svg" />
@@ -32,11 +33,11 @@
     {
         <div class="item__label item__label--last-healthy" title="@lastHealthyTooltip">
             <SvgIcon SvgUrl="/assets/check_icon.svg" />
-            @Item.LastHealthyText
+            @lastHealthyText
         </div>
     }
 
-    <button class="button item__button--details" @onclick="ShowDetails" title="Show details">
+    <button class="button item__button--details" @onclick="ShowHistory" title="Show details">
         <SvgIcon SvgUrl="/assets/logs_icon.svg" />
     </button>
 
@@ -44,51 +45,111 @@
 
 @if (historyVisible)
 {
-    <HistoryView Label="@Item.Label" Logs="@itemLogs" Close="()=>historyVisible=false" />
+    <HistoryView Label="@Item.Label" Logs="@healthLogs" Close="()=>historyVisible=false" />
 }
 
 @code {
     [Parameter]
     public required ItemViewModel Item { get; set; }
 
-    string wrapperCss => Item.LastCheck.HasValue ?
-        (Item.IsHealthy ? "item__wrapper item__wrapper--healthy" : "item__wrapper item__wrapper--unhealthy")
+    bool isChecking;
+    bool isHealthy;
+    DateTime? lastCheck;
+    DateTime? lastHealthy;
+
+    string wrapperCss => lastCheck.HasValue ?
+        (isHealthy ? "item__wrapper item__wrapper--healthy" : "item__wrapper item__wrapper--unhealthy")
         : "item__wrapper";
 
-    string lastCheckTooltip => $"Last check: {Item.LastCheck}";
+    bool lastCheckVisible => lastCheck.HasValue;
+    string lastCheckText => lastCheck.HasValue ? DateTimeToText(lastCheck.Value) : "";
+    string lastCheckTooltip => $"Last check: {lastCheck}";
 
-    bool lastHealthyVisible => !string.IsNullOrEmpty(Item.LastHealthyText) && !Item.IsHealthy;
-    string lastHealthyTooltip => $"Last healthy: {Item.LastHealthy}";
+    bool lastHealthyVisible => !string.IsNullOrEmpty(lastHealthyText) && !isHealthy;
+    string lastHealthyText => lastHealthy.HasValue ? DateTimeToText(lastHealthy.Value) : "";
+    string lastHealthyTooltip => $"Last healthy: {lastHealthy}";
 
     bool historyVisible;
-    Dictionary<DateTime, bool> itemLogs = new Dictionary<DateTime, bool>();
+    Dictionary<DateTime, bool>? healthLogs;
 
     string test = "aaa";
 
     protected override void OnInitialized()
     {
-        _itemService.ItemUpdated += ItemUpdated;
+        _itemService.OnHealthChecked += HealthChecked;
+        _itemService.OnHealthChecking += HealthChecking;
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
+        if (firstRender)
+        {
+            InvokeAsync(InitFromHistory);
+        }
         test = DateTime.Now.ToString("HH:mm:ss");
     }
 
-    private void ItemUpdated(object? sender, ItemViewModel item)
+    void IDisposable.Dispose()
     {
-        if (item.Name == Item.Name)
-            StateHasChanged();
+        _itemService.OnHealthChecked -= HealthChecked;
+        _itemService.OnHealthChecking -= HealthChecking;
     }
 
-    public async Task Refresh()
+    async Task InitFromHistory()
     {
-        await _itemService.UpdateHealthAsync(Item);
+        isChecking = true;
+        StateHasChanged();
+
+        var health = await Task.Run(() => _itemService.GetHealthFromHistory(Item.Name));
+        if (health != null)
+        {
+            isHealthy = health.IsHealthy;
+            lastCheck = health.LastCheck;
+            lastHealthy = health.LastHealthy;
+        }
+        isChecking = false;
+        StateHasChanged();
     }
 
-    void ShowDetails()
+    void HealthChecked(string name, bool isHealthy, DateTime lastCheck)
+    {
+        if (name != Item.Name)
+            return;
+
+        this.isHealthy = isHealthy;
+        this.lastCheck = lastCheck;
+
+        if (isHealthy)
+            lastHealthy = lastCheck;
+
+        isChecking = false;
+
+        StateHasChanged();
+    }
+
+    void HealthChecking(string name)
+    {
+        if (name != Item.Name)
+            return;
+
+        isChecking = true;
+        StateHasChanged();
+    }
+
+    async Task Refresh()
+    {
+        await _itemService.CheckHealthAsync(Item.Name, Item.Endpoint);
+    }
+
+    async Task ShowHistory()
     {
         historyVisible = true;
-        itemLogs = _historyService.GetLogs(Item.Name);
+        healthLogs = await Task.Run(() => _historyService.GetLogs(Item.Name));
+    }
+
+    string DateTimeToText(DateTime dateTime)
+    {
+        var format = dateTime.Date == DateTime.Today ? "HH:mm:ss" : "yyyy-MM-dd HH:mm";
+        return dateTime.ToString(format);
     }
 }

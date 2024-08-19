@@ -12,9 +12,9 @@ builder.Services.AddScoped(s => new HttpClient { BaseAddress = new Uri(s.GetRequ
 builder.Services.AddScoped<IApiHealthService, ApiHealthService>();
 builder.Services.AddScoped<IGrpcHealthService, GrpcHealthService>();
 builder.Services.AddScoped<IWcfHealthService, WcfHealthService>();
+builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
 builder.Services.AddSingleton<IHistoryService, HistoryService>();
-
 
 var app = builder.Build();
 

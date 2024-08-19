@@ -12,7 +12,7 @@
     </button>
 
     <ul class="group__list">
-        @foreach (var item in sortedItems)
+        @foreach (var item in Group.Items.OrderBy(r => r.Order))
         {
             <li class="group__list-item">
                 <ItemView Item="@item" />
@@ -27,17 +27,14 @@
     [Parameter]
     public required GroupViewModel Group { get; set; }
 
-    ItemViewModel[] sortedItems => Group.Items.OrderBy(r => r.Order).ToArray();
-
     async Task Refresh()
     {
         var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
-        await Parallel.ForEachAsync(Group.Items, options, async (i, _) => await UpdateItem(i));
+        await Parallel.ForEachAsync(
+            Group.Items,
+            options,
+            async (item, _) =>
+                await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint))
+        );
     }
-
-    private async Task UpdateItem(ItemViewModel item)
-    {
-        await InvokeAsync(async () => { await _itemService.UpdateHealthAsync(item); });
-    }
-
 }

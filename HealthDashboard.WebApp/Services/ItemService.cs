@@ -6,96 +6,64 @@ namespace HealthDashboard.WebApp.Services;
 
 public class ItemService : IItemService
 {
-    private readonly IApiHealthService _apiHealthService;
-    private readonly IGrpcHealthService _grpcHealthService;
-    private readonly IWcfHealthService _wcfHealthService;
+    private readonly IHealthService _healthService;
     private readonly HttpClient _httpClient;
     private readonly IHistoryService _historyService;
 
     private readonly bool _isDemoMode = false;
     private readonly Random _rnd = new();
 
-    public ItemService(IApiHealthService apiHealthService, IGrpcHealthService grpcHealthService, IWcfHealthService wcfHealthService, HttpClient httpClient, IHistoryService historyService)
+    public ItemService(IHealthService healthService, HttpClient httpClient, IHistoryService historyService)
     {
-        _apiHealthService = apiHealthService;
-        _grpcHealthService = grpcHealthService;
-        _wcfHealthService = wcfHealthService;
         _historyService = historyService;
+        _healthService = healthService;
         _httpClient = httpClient;
     }
 
-    public EventHandler<ItemViewModel>? ItemUpdated { get; set; }
+    public Action<string, bool, DateTime>? OnHealthChecked { get; set; }
+    public Action<string>? OnHealthChecking { get; set; }
 
     public async Task<GroupViewModel[]> GetGroupsAsync()
     {
-        var groups = await _httpClient.GetFromJsonAsync<GroupViewModel[]>("data/items.json");
+        var configurations = await _httpClient.GetFromJsonAsync<GroupConfiguration[]>("data/items.json");
 
-        if (groups == null)
+        if (configurations == null)
             return [];
 
-        return groups;
+        var viewModels = configurations.Select(r => r.ToViewModel()).ToArray();
+        return viewModels;
     }
 
-    public void InitItemFromHistory(ItemViewModel item)
+    public async Task CheckHealthAsync(string name, EndpointInfo endpoint)
     {
-        var logs = _historyService.GetLogs(item.Name);
+        OnHealthChecking?.Invoke(name);
+
+        var isHealthy = await _healthService.CheckHealthAsync(endpoint);
+        var time = DateTime.Now;
+        OnHealthChecked?.Invoke(name, isHealthy, time);
+
+        _historyService.AddLog(name, time, isHealthy);
+    }
+
+    public HealthInfo? GetHealthFromHistory(string name)
+    {
+        var logs = _historyService.GetLogs(name);
 
         if (!logs.Any())
-            return;
+            return null;
 
-        var last = logs.OrderByDescending(r => r.Key).First();
-        item.IsHealthy = last.Value;
-        item.LastCheck = last.Key;
+        var lastLog = logs.OrderByDescending(r => r.Key).First();
+        var isHealthy = lastLog.Value;
+        var lastCheck = lastLog.Key;
 
+        DateTime? lastHealthy = null;
         if (logs.Where(r => r.Value).Any())
         {
-            var lastHealthy = logs.Where(r => r.Value).OrderByDescending(r => r.Key).First();
-            item.LastHealthy = lastHealthy.Key;
-        }
-    }
-
-    public async Task UpdateHealthAsync(ItemViewModel item)
-    {
-        item.IsChecking = true;
-        ItemUpdated?.Invoke(null, item);
-
-        var time = DateTime.Now;
-
-        await Task.Delay(2000);
-
-        if (_isDemoMode)
-        {
-            var r = _rnd.Next(0, 2);
-            item.IsHealthy = (r > 0);
-        }
-        else
-        {
-            item.IsHealthy = await GetHealthAsync(item.Type, item.Address);
+            var lastHealthyLog = logs.Where(r => r.Value).OrderByDescending(r => r.Key).First();
+            lastHealthy = lastHealthyLog.Key;
         }
 
-        item.LastCheck = time;
-        if (item.IsHealthy)
-            item.LastHealthy = time;
+        return new HealthInfo(isHealthy, lastCheck, lastHealthy);
 
-        item.IsChecking = false;
-        ItemUpdated?.Invoke(null, item);
-
-        _historyService.AddLog(item.Name, time, item.IsHealthy);
-    }
-
-    private async Task<bool> GetHealthAsync(ServiceType serviceType, string address)
-    {
-        switch (serviceType)
-        {
-            case ServiceType.Api:
-                return await _apiHealthService.CheckHealthAsync(address);
-            case ServiceType.Grpc:
-                return await _grpcHealthService.CheckHealthAsync(address);
-            case ServiceType.Wcf:
-                return _wcfHealthService.CheckHealth(address);
-            default:
-                break;
-        }
-        return false;
     }
 }

@@ -3,31 +3,44 @@
 
     <div class="history__box">
 
-        <h3 class="history__header">@Label logs</h3>
+        <h3 class="history__header">@Label health history</h3>
 
         <button class="history__close-button" @onclick="Close">
             <SvgIcon SvgUrl="/assets/close_icon.svg" />
         </button>
 
-        <table class="history__table">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var log in Logs.OrderByDescending(r => r.Key))
-                {
+        @if (Logs is null)
+        {
+            <div class="history__loader">
+                Loading...
+                <SvgIcon SvgUrl="/assets/loading_icon.svg" />
+            </div>
+        }
+        else
+        {
+            <table class="history__table">
+                <thead>
                     <tr>
-                        <td class="@GetStatusCss(log.Value)">@log.Key</td>
-                        <td class="@GetStatusCss(log.Value)"> @GetStatusText(log.Value)</td>
+                        <th>Time</th>
+                        <th>Status</th>
                     </tr>
-                }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var log in Logs.OrderByDescending(r => r.Key))
+                    {
+                        <tr>
+                            <td class="@GetStatusCss(log.Value)">@log.Key</td>
+                            <td class="@GetStatusCss(log.Value)"> @GetStatusText(log.Value)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
 
     </div>
+</div>
+
+<div class="history__mask" @onclick="Close">
 </div>
 
 @code {
@@ -35,7 +48,7 @@
     public required string Label { get; set; }
 
     [Parameter]
-    public Dictionary<DateTime, bool> Logs { get; set; } = new Dictionary<DateTime, bool>();
+    public Dictionary<DateTime, bool>? Logs { get; set; }
 
     [Parameter]
     public EventCallback Close { get; set; }
