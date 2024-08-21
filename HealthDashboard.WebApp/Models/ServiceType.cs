@@ -1,4 +1,4 @@
-﻿namespace HealthDashboard.WebApp.ViewModels;
+﻿namespace HealthDashboard.WebApp.Models;
 
 public enum ServiceType
 {

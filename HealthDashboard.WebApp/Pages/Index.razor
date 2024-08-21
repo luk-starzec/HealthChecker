@@ -3,10 +3,9 @@
 @using HealthDashboard.WebApp.Services
 @using HealthDashboard.WebApp.Components
 @using HealthDashboard.WebApp.ViewModels
-@using System.Timers
-@implements IDisposable
 
 @inject IItemService _itemService;
+@inject IHistoryService _historyService;
 
 <div class="home-page__wrapper">
 
@@ -14,7 +13,7 @@
         @foreach (var group in groups)
         {
             <li>
-                <GroupView Group="@group" />
+                <GroupView Group="@group" OnShowHistory="HandleShowHistory" />
             </li>
         }
     </ul>
@@ -29,27 +28,7 @@
 
             @if (settingsVisible)
             {
-
-                <div class="home-page__interval-wrapper" title="Refresh interval">
-
-                    <SvgIcon SvgUrl="/assets/interval_icon.svg" />
-
-                    <input type="number" @bind="@RefreshInterval" @bind:event="onchange" min="10" />
-                    s
-                </div>
-
-                @if (timer.Enabled)
-                {
-                    <button class="button home-page__button-stop" @onclick="()=>timer.Stop()" title="Stop auto refresh">
-                        <SvgIcon SvgUrl="/assets/pause_icon.svg" />
-                    </button>
-                }
-                else
-                {
-                    <button class="button home-page__button-start" @onclick="()=>timer.Start()" title="Start auto refresh">
-                        <SvgIcon SvgUrl="/assets/play_icon.svg" />
-                    </button>
-                }
+                <SettingsView />
             }
 
             <button class="button home-page__button-settings" @onclick="()=>settingsVisible=!settingsVisible" title="@settingsTooltip">
@@ -61,75 +40,40 @@
     </div>
 </div>
 
+@if (historyVisible)
+{
+    <HistoryView Label="@historyLabel" Logs="@healthLogs" OnClose="()=>historyVisible=false" />
+}
+
 @code {
     GroupViewModel[] groups = [];
 
-    Timer timer = new Timer();
-
-    int RefreshInterval
-    {
-        get => (int)(timer.Interval / 1000);
-        set
-        {
-            if (value > 0)
-                timer.Interval = value * 1000;
-        }
-    }
+    bool timerEnabled;
+    int timerInterval;
 
     bool settingsVisible;
     string settingsIcon => settingsVisible ? "/assets/right_arrow_icon.svg" : "/assets/menu_icon.svg";
     string settingsTooltip => settingsVisible ? "Hide settings" : "Show settings";
 
+    bool historyVisible;
+    string historyLabel = "";
+    Dictionary<DateTime, bool>? healthLogs;
+
     protected override async Task OnInitializedAsync()
     {
-        timer.Interval = 10_000;
-        timer.AutoReset = true;
-        timer.Elapsed += OnTimerTick;
-
         groups = await _itemService.GetGroupsAsync();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await RefreshAll();
-            timer.Start();
-        }
-    }
-
-    void IDisposable.Dispose()
-    {
-        timer.Dispose();
     }
 
     private async Task RefreshAll()
     {
         var items = groups.SelectMany(r => r.Items);
-
-        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
-        await Parallel.ForEachAsync(
-            items,
-            options,
-            async (item, _) =>
-                await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint))
-        );
-
-        if (timer.Enabled)
-        {
-            timer.Stop();
-            timer.Start();
-        }
+        await Parallel.ForEachAsync(items, async (item, _) => await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint)));
     }
 
-    private async Task UpdateHealth(ItemViewModel item)
+    async Task HandleShowHistory(ItemViewModel item)
     {
-        await InvokeAsync(async () => { await _itemService.CheckHealthAsync(item.Name, item.Endpoint); });
+        historyLabel = $"{item.Label} health history";
+        historyVisible = true;
+        healthLogs = await Task.Run(() => _historyService.GetLogs(item.Name));
     }
-
-    private void OnTimerTick(object? source, ElapsedEventArgs e)
-    {
-        InvokeAsync(async () => await RefreshAll());
-    }
-
 }

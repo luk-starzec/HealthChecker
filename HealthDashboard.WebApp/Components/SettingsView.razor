@@ -1,0 +1,81 @@
+﻿@using HealthDashboard.WebApp.Interfaces
+@using HealthDashboard.WebApp.Services
+@implements IDisposable
+
+@inject IIntervalService _intervalService;
+@inject EventBus _eventBus;
+
+<div class="settings__wrapper">
+
+    <div class="settings__interval-wrapper" title="Refresh interval">
+
+        <SvgIcon SvgUrl="/assets/interval_icon.svg" />
+
+        <input type="number" @bind="@TimerInterval" @bind:event="onchange" min="@minTimerInterval" />
+        s
+    </div>
+
+    @if (timerEnabled)
+    {
+        <button class="button" @onclick="()=>_intervalService.Stop()" title="Stop auto refresh">
+            <SvgIcon SvgUrl="/assets/pause_icon.svg" />
+        </button>
+    }
+    else
+    {
+        <button class="button" @onclick="()=>_intervalService.Start()" title="Start auto refresh">
+            <SvgIcon SvgUrl="/assets/play_icon.svg" />
+        </button>
+    }
+
+</div>
+
+@code {
+    int minTimerInterval = 10;
+    bool timerEnabled;
+    int timerInterval;
+
+    int TimerInterval
+    {
+        get => GetTimerInterval();
+        set => SetTimerInterval(value);
+    }
+
+    protected override void OnInitialized()
+    {
+        _eventBus.OnIntervalChanged += HandleIntervalChanged;
+        _eventBus.OnEnabledChanged += HandleEnabledChanged;
+
+        timerInterval = _intervalService.GetInterval();
+        timerEnabled = _intervalService.GetEnabled();
+    }
+
+    void IDisposable.Dispose()
+    {
+        _eventBus.OnIntervalChanged -= HandleIntervalChanged;
+        _eventBus.OnEnabledChanged -= HandleEnabledChanged;
+    }
+
+    void HandleEnabledChanged(bool enabled)
+    {
+        timerEnabled = enabled;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void HandleIntervalChanged(int seconds)
+    {
+        timerInterval = seconds;
+        InvokeAsync(StateHasChanged);
+    }
+
+    void SetTimerInterval(int value)
+    {
+        if (value >= minTimerInterval)
+            _intervalService.SetInterval(value);
+    }
+
+    int GetTimerInterval()
+    {
+        return timerInterval;
+    }
+}

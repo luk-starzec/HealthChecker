@@ -3,9 +3,11 @@
 
     <div class="history__box">
 
-        <h3 class="history__header">@Label health history</h3>
+        <h3 class="history__header">
+            @Label
+        </h3>
 
-        <button class="history__close-button" @onclick="Close">
+        <button class="history__close-button" @onclick="OnClose" title="Close">
             <SvgIcon SvgUrl="/assets/close_icon.svg" />
         </button>
 
@@ -40,7 +42,7 @@
     </div>
 </div>
 
-<div class="history__mask" @onclick="Close">
+<div class="history__mask" @onclick="OnClose">
 </div>
 
 @code {
@@ -51,7 +53,7 @@
     public Dictionary<DateTime, bool>? Logs { get; set; }
 
     [Parameter]
-    public EventCallback Close { get; set; }
+    public EventCallback OnClose { get; set; }
 
     string GetStatusText(bool isHealthy) => isHealthy ? "OK" : "Failed";
     string GetStatusCss(bool isHealthy) => isHealthy ? "history__status-ok" : "history__status-failed";

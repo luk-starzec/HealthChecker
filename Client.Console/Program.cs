@@ -14,7 +14,7 @@ Console.ReadLine();
 void GetWcfHealth()
 {
     var baseAddress = new Uri("net.tcp://localhost:9001/TestService/hc");
-    var binding = new NetTcpBinding(SecurityMode.None, true);
+    var binding = new NetTcpBinding(SecurityMode.None, false);
     var endpoint = new EndpointAddress(baseAddress);
     var channel = new ChannelFactory<IWcfHealthCheck>(binding, endpoint);
     var proxy = channel.CreateChannel(endpoint);

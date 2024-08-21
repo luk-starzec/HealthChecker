@@ -1,17 +1,14 @@
 ﻿using HealthDashboard.WebApp.Interfaces;
+using HealthDashboard.WebApp.Models;
 using HealthDashboard.WebApp.ViewModels;
 
 namespace HealthDashboard.WebApp.Services;
 
-
 public class ItemService : IItemService
 {
     private readonly IHealthService _healthService;
-    private readonly HttpClient _httpClient;
     private readonly IHistoryService _historyService;
-
-    private readonly bool _isDemoMode = false;
-    private readonly Random _rnd = new();
+    private readonly HttpClient _httpClient;
 
     public ItemService(IHealthService healthService, HttpClient httpClient, IHistoryService historyService)
     {
@@ -20,15 +17,17 @@ public class ItemService : IItemService
         _httpClient = httpClient;
     }
 
-    public Action<string, bool, DateTime>? OnHealthChecked { get; set; }
-    public Action<string>? OnHealthChecking { get; set; }
-
     public async Task<GroupViewModel[]> GetGroupsAsync()
     {
-        var configurations = await _httpClient.GetFromJsonAsync<GroupConfiguration[]>("data/items.json");
+        var configurations = await _httpClient.GetFromJsonAsync<GroupConfiguration[]>("data/items1.json");
 
         if (configurations == null)
             return [];
+
+        foreach (var item in configurations.SelectMany(r => r.Items))
+        {
+            _healthService.RegisterEndpoint(item.Name, new EndpointInfo(item.Type, item.Address));
+        }
 
         var viewModels = configurations.Select(r => r.ToViewModel()).ToArray();
         return viewModels;
@@ -36,13 +35,7 @@ public class ItemService : IItemService
 
     public async Task CheckHealthAsync(string name, EndpointInfo endpoint)
     {
-        OnHealthChecking?.Invoke(name);
-
-        var isHealthy = await _healthService.CheckHealthAsync(endpoint);
-        var time = DateTime.Now;
-        OnHealthChecked?.Invoke(name, isHealthy, time);
-
-        _historyService.AddLog(name, time, isHealthy);
+        await _healthService.CheckHealthAsync(name, endpoint);
     }
 
     public HealthInfo? GetHealthFromHistory(string name)
@@ -64,6 +57,5 @@ public class ItemService : IItemService
         }
 
         return new HealthInfo(isHealthy, lastCheck, lastHealthy);
-
     }
 }

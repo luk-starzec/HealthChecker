@@ -14,8 +14,8 @@
     <ul class="group__list">
         @foreach (var item in Group.Items.OrderBy(r => r.Order))
         {
-            <li class="group__list-item">
-                <ItemView Item="@item" />
+            <li>
+                <ItemView Item="@item" OnShowHistory="OnShowHistory" />
             </li>
         }
 
@@ -27,14 +27,11 @@
     [Parameter]
     public required GroupViewModel Group { get; set; }
 
+    [Parameter]
+    public EventCallback<ItemViewModel> OnShowHistory { get; set; }
+
     async Task Refresh()
     {
-        var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
-        await Parallel.ForEachAsync(
-            Group.Items,
-            options,
-            async (item, _) =>
-                await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint))
-        );
+        await Parallel.ForEachAsync(Group.Items, async (item, _) => await InvokeAsync(async () => await _itemService.CheckHealthAsync(item.Name, item.Endpoint)));
     }
 }

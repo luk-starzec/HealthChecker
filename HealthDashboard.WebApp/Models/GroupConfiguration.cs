@@ -1,4 +1,6 @@
-﻿namespace HealthDashboard.WebApp.ViewModels;
+﻿using HealthDashboard.WebApp.ViewModels;
+
+namespace HealthDashboard.WebApp.Models;
 
 public record GroupConfiguration
 {
@@ -9,12 +11,6 @@ public record GroupConfiguration
 
     public GroupViewModel ToViewModel()
     {
-        return new GroupViewModel
-        {
-            Name = Name,
-            Label = Label,
-            Order = Order,
-            Items = Items.Select(x => x.ToViewModel()).ToList(),
-        };
+        return new GroupViewModel(Name, Label, Order, Items.Select(x => x.ToViewModel()).ToList());
     }
 }

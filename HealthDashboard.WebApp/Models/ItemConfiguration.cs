@@ -1,4 +1,6 @@
-﻿namespace HealthDashboard.WebApp.ViewModels;
+﻿using HealthDashboard.WebApp.ViewModels;
+
+namespace HealthDashboard.WebApp.Models;
 
 public record ItemConfiguration
 {

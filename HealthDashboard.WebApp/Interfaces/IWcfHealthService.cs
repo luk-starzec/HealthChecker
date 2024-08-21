@@ -3,5 +3,4 @@
 public interface IWcfHealthService 
 {
     bool CheckHealth(string address);
-
 }

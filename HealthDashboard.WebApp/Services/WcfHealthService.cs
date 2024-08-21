@@ -6,7 +6,7 @@ namespace HealthDashboard.WebApp.Services;
 
 public class WcfHealthService : IWcfHealthService
 {
-    private static Dictionary<string, ChannelFactory<IWcfHealthCheck>> _factories = [];
+    private static readonly Dictionary<string, ChannelFactory<IWcfHealthCheck>> _factories = [];
 
     public bool CheckHealth(string address)
     {

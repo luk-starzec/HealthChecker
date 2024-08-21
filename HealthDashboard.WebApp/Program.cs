@@ -9,12 +9,15 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped(s => new HttpClient { BaseAddress = new Uri(s.GetRequiredService<NavigationManager>().BaseUri) });
 
-builder.Services.AddScoped<IApiHealthService, ApiHealthService>();
-builder.Services.AddScoped<IGrpcHealthService, GrpcHealthService>();
-builder.Services.AddScoped<IWcfHealthService, WcfHealthService>();
-builder.Services.AddScoped<IHealthService, HealthService>();
 builder.Services.AddScoped<IItemService, ItemService>();
+builder.Services.AddSingleton<IApiHealthService, ApiHealthService>();
+builder.Services.AddSingleton<IGrpcHealthService, GrpcHealthService>();
+builder.Services.AddSingleton<IWcfHealthService, WcfHealthService>();
+builder.Services.AddSingleton<IHealthService, HealthService>();
 builder.Services.AddSingleton<IHistoryService, HistoryService>();
+builder.Services.AddSingleton<IIntervalService, IntervalService>();
+builder.Services.AddSingleton<EventBus>();
+builder.Services.AddHostedService<WatchDogBackgroundService>();
 
 var app = builder.Build();
 

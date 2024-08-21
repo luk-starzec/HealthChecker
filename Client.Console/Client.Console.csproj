@@ -16,6 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\Example.Wcf\Example.Wcf.csproj" />
 		<ProjectReference Include="..\Shared.Wcf\Shared.Wcf.csproj" />
 	</ItemGroup>
 

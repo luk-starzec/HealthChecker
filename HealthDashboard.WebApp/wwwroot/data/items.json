@@ -1,49 +1,85 @@
 [
   {
-    "Name": "TestGroup1",
-    "Label": "Test services 1",
+    "Name": "example_group",
+    "Label": "Example services",
     "Order": 1,
     "Items": [
       {
-        "Name": "api1",
-        "Label": "API service 1",
+        "Name": "example_api1",
+        "Label": "API service",
         "Type": 1,
         "Address": "https://localhost:7001/hc"
       },
       {
-        "Name": "grpc1",
+        "Name": "example_grpc1",
         "Label": "gRPC service",
         "Type": 2,
         "Address": "https://localhost:8001"
       },
       {
-        "Name": "wcf1",
-        "Label": "WCF Service 1",
+        "Name": "example_wcf1",
+        "Label": "WCF Service",
         "Type": 3,
         "Address": "net.tcp://localhost:9001/TestService/hc"
       }
     ]
   },
   {
-    "Name": "TestGroup2",
-    "Label": "Test group 2",
+    "Name": "test_group",
+    "Label": "Test group",
     "Order": 1,
     "Items": [
       {
-        "Name": "Item21",
-        "Label": "Item 21",
+        "Name": "test_item1",
+        "Label": "Item 1",
         "Type": 1,
         "Address": "https://localhost:7011/hc"
       },
       {
-        "Name": "Item22",
-        "Label": "Item 22",
+        "Name": "test_item2",
+        "Label": "Item 2",
         "Type": 1,
         "Address": "https://localhost:7021/hc"
       },
       {
-        "Name": "Item23",
-        "Label": "Item 23",
+        "Name": "test_item3",
+        "Label": "Item 3",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item4",
+        "Label": "Item 4",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item5",
+        "Label": "Item 5",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item6",
+        "Label": "Item 6",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item7",
+        "Label": "Item 7",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item8",
+        "Label": "Item 8",
+        "Type": 1,
+        "Address": "https://localhost:7031/hc"
+      },
+      {
+        "Name": "test_item9",
+        "Label": "Item 9",
         "Type": 1,
         "Address": "https://localhost:7031/hc"
       }

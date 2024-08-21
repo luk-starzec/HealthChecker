@@ -1,9 +1,10 @@
 ﻿@using HealthDashboard.WebApp.Interfaces
+@using HealthDashboard.WebApp.Services
 @using HealthDashboard.WebApp.ViewModels
 @implements IDisposable
 
 @inject IItemService _itemService;
-@inject IHistoryService _historyService;
+@inject EventBus _eventBus;
 
 <div class=@wrapperCss>
 
@@ -27,7 +28,9 @@
         </button>
     }
 
-    <h3 class="item__header">@Item.Label | @test</h3>
+    <h3 class="item__header" title="@labelTooltip">
+        @Item.Label
+    </h3>
 
     @if (lastHealthyVisible)
     {
@@ -43,14 +46,12 @@
 
 </div>
 
-@if (historyVisible)
-{
-    <HistoryView Label="@Item.Label" Logs="@healthLogs" Close="()=>historyVisible=false" />
-}
-
 @code {
     [Parameter]
     public required ItemViewModel Item { get; set; }
+
+    [Parameter]
+    public EventCallback<ItemViewModel> OnShowHistory { get; set; }
 
     bool isChecking;
     bool isHealthy;
@@ -61,6 +62,8 @@
         (isHealthy ? "item__wrapper item__wrapper--healthy" : "item__wrapper item__wrapper--unhealthy")
         : "item__wrapper";
 
+    string labelTooltip => $"{Item.Endpoint.Type}{Environment.NewLine}{Item.Endpoint.Address}";
+
     bool lastCheckVisible => lastCheck.HasValue;
     string lastCheckText => lastCheck.HasValue ? DateTimeToText(lastCheck.Value) : "";
     string lastCheckTooltip => $"Last check: {lastCheck}";
@@ -69,15 +72,10 @@
     string lastHealthyText => lastHealthy.HasValue ? DateTimeToText(lastHealthy.Value) : "";
     string lastHealthyTooltip => $"Last healthy: {lastHealthy}";
 
-    bool historyVisible;
-    Dictionary<DateTime, bool>? healthLogs;
-
-    string test = "aaa";
-
     protected override void OnInitialized()
     {
-        _itemService.OnHealthChecked += HealthChecked;
-        _itemService.OnHealthChecking += HealthChecking;
+        _eventBus.OnHealthChecked += HealthChecked;
+        _eventBus.OnHealthChecking += HealthChecking;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -86,13 +84,12 @@
         {
             InvokeAsync(InitFromHistory);
         }
-        test = DateTime.Now.ToString("HH:mm:ss");
     }
 
     void IDisposable.Dispose()
     {
-        _itemService.OnHealthChecked -= HealthChecked;
-        _itemService.OnHealthChecking -= HealthChecking;
+        _eventBus.OnHealthChecked -= HealthChecked;
+        _eventBus.OnHealthChecking -= HealthChecking;
     }
 
     async Task InitFromHistory()
@@ -124,7 +121,7 @@
 
         isChecking = false;
 
-        StateHasChanged();
+        InvokeAsync(StateHasChanged);
     }
 
     void HealthChecking(string name)
@@ -133,19 +130,13 @@
             return;
 
         isChecking = true;
-        StateHasChanged();
+
+        InvokeAsync(StateHasChanged);
     }
 
-    async Task Refresh()
-    {
-        await _itemService.CheckHealthAsync(Item.Name, Item.Endpoint);
-    }
+    async Task Refresh() => await _itemService.CheckHealthAsync(Item.Name, Item.Endpoint);
 
-    async Task ShowHistory()
-    {
-        historyVisible = true;
-        healthLogs = await Task.Run(() => _historyService.GetLogs(Item.Name));
-    }
+    async Task ShowHistory() => await OnShowHistory.InvokeAsync(Item);
 
     string DateTimeToText(DateTime dateTime)
     {

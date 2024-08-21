@@ -7,8 +7,5 @@ namespace Shared.Wcf
     {
         [OperationContract]
         string GetData();
-
-        //[OperationContract]
-        //bool HealthCheck();
     }
 }
