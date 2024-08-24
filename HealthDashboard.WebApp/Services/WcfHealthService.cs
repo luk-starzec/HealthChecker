@@ -4,7 +4,7 @@ using System.ServiceModel;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class WcfHealthService : IWcfHealthService
+internal sealed class WcfHealthService : IWcfHealthService
 {
     private static readonly Dictionary<string, ChannelFactory<IWcfHealthCheck>> _factories = [];
 
@@ -16,7 +16,7 @@ public class WcfHealthService : IWcfHealthService
             var result = channel.HealthCheck();
             return result;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }
@@ -30,7 +30,7 @@ public class WcfHealthService : IWcfHealthService
         return channel;
     }
 
-    protected ChannelFactory<IWcfHealthCheck> GetChannelFactory(string address)
+    private ChannelFactory<IWcfHealthCheck> GetChannelFactory(string address)
     {
         if (!_factories.TryGetValue(address, out var factory))
         {
@@ -100,5 +100,4 @@ public class WcfHealthService : IWcfHealthService
         }
         _factories.Clear();
     }
-
 }

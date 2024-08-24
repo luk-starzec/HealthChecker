@@ -5,7 +5,7 @@ using System.ServiceModel;
 namespace Example.Wcf
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single)]
-    public class TestService : ITestService, IWcfHealthCheck
+    public class TestDataService : ITestDataService, IWcfHealthCheck
     {
         public string GetData()
         {

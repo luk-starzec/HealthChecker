@@ -4,7 +4,7 @@ using HealthDashboard.WebApp.ViewModels;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class ItemService : IItemService
+internal sealed class ItemService : IItemService
 {
     private readonly IHealthService _healthService;
     private readonly IHistoryService _historyService;
@@ -19,7 +19,7 @@ public class ItemService : IItemService
 
     public async Task<GroupViewModel[]> GetGroupsAsync()
     {
-        var configurations = await _httpClient.GetFromJsonAsync<GroupConfiguration[]>("data/items1.json");
+        var configurations = await _httpClient.GetFromJsonAsync<GroupConfiguration[]>("data/items.json");
 
         if (configurations == null)
             return [];

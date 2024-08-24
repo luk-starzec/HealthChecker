@@ -1,4 +1,10 @@
-﻿
+﻿@using HealthDashboard.WebApp.Interfaces
+@using HealthDashboard.WebApp.Services
+@implements IDisposable
+
+@inject IHistoryService _historyService;
+@inject EventBus _eventBus;
+
 <div class="history__wrapper">
 
     <div class="history__box">
@@ -11,7 +17,7 @@
             <SvgIcon SvgUrl="/assets/close_icon.svg" />
         </button>
 
-        @if (Logs is null)
+        @if (logs is null)
         {
             <div class="history__loader">
                 Loading...
@@ -28,12 +34,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var log in Logs.OrderByDescending(r => r.Key))
+                    @if (!logs.Any())
                     {
                         <tr>
-                            <td class="@GetStatusCss(log.Value)">@log.Key</td>
-                            <td class="@GetStatusCss(log.Value)"> @GetStatusText(log.Value)</td>
+                            <td colspan="2" class="history__cell--no-logs">No logs</td>
                         </tr>
+                    }
+                    else
+                    {
+                        @foreach (var log in logs)
+                        {
+                            <tr>
+                                <td class="@GetStatusCss(log.Value)">@log.Key</td>
+                                <td class="@GetStatusCss(log.Value)"> @GetStatusText(log.Value)</td>
+                            </tr>
+                        }
                     }
                 </tbody>
             </table>
@@ -50,11 +65,46 @@
     public required string Label { get; set; }
 
     [Parameter]
-    public Dictionary<DateTime, bool>? Logs { get; set; }
+    public required string Name { get; set; }
 
     [Parameter]
     public EventCallback OnClose { get; set; }
 
+    Dictionary<DateTime, bool>? logs { get; set; }
+
     string GetStatusText(bool isHealthy) => isHealthy ? "OK" : "Failed";
     string GetStatusCss(bool isHealthy) => isHealthy ? "history__status-ok" : "history__status-failed";
+
+    protected override void OnInitialized()
+    {
+        _eventBus.OnHistoryChanged += HandleHistoryChanged;
+    }
+
+    void IDisposable.Dispose()
+    {
+        _eventBus.OnHistoryChanged -= HandleHistoryChanged;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            InvokeAsync(LoadLogs);
+        }
+    }
+
+    async Task LoadLogs()
+    {
+        logs = await Task.Run(() => _historyService.GetLogs(Name).OrderByDescending(r => r.Key).ToDictionary());
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    void HandleHistoryChanged(string name)
+    {
+        if (name != Name)
+            return;
+
+        InvokeAsync(LoadLogs);
+    }
 }

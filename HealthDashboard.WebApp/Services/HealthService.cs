@@ -3,7 +3,7 @@ using HealthDashboard.WebApp.Models;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class HealthService : IHealthService, IDisposable
+internal sealed class HealthService : IHealthService, IDisposable
 {
     private readonly IApiHealthService _apiHealthService;
     private readonly IGrpcHealthService _grpcHealthService;

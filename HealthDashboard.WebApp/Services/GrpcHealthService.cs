@@ -4,7 +4,7 @@ using HealthDashboard.WebApp.Interfaces;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class GrpcHealthService : IGrpcHealthService
+internal sealed class GrpcHealthService : IGrpcHealthService
 {
     private static readonly Dictionary<string, GrpcChannel> _channels = [];
 

@@ -74,8 +74,8 @@
 
     protected override void OnInitialized()
     {
-        _eventBus.OnHealthChecked += HealthChecked;
-        _eventBus.OnHealthChecking += HealthChecking;
+        _eventBus.OnHealthChecked += HandleHealthChecked;
+        _eventBus.OnHealthChecking += HandleHealthChecking;
     }
 
     protected override void OnAfterRender(bool firstRender)
@@ -88,8 +88,8 @@
 
     void IDisposable.Dispose()
     {
-        _eventBus.OnHealthChecked -= HealthChecked;
-        _eventBus.OnHealthChecking -= HealthChecking;
+        _eventBus.OnHealthChecked -= HandleHealthChecked;
+        _eventBus.OnHealthChecking -= HandleHealthChecking;
     }
 
     async Task InitFromHistory()
@@ -103,12 +103,17 @@
             isHealthy = health.IsHealthy;
             lastCheck = health.LastCheck;
             lastHealthy = health.LastHealthy;
+
+            isChecking = false;
+            StateHasChanged();
         }
-        isChecking = false;
-        StateHasChanged();
+        else
+        {
+            await Refresh();
+        }
     }
 
-    void HealthChecked(string name, bool isHealthy, DateTime lastCheck)
+    void HandleHealthChecked(string name, bool isHealthy, DateTime lastCheck)
     {
         if (name != Item.Name)
             return;
@@ -124,7 +129,7 @@
         InvokeAsync(StateHasChanged);
     }
 
-    void HealthChecking(string name)
+    void HandleHealthChecking(string name)
     {
         if (name != Item.Name)
             return;
@@ -140,7 +145,7 @@
 
     string DateTimeToText(DateTime dateTime)
     {
-        var format = dateTime.Date == DateTime.Today ? "HH:mm:ss" : "yyyy-MM-dd HH:mm";
+        var format = dateTime.Date == DateTime.Today ? "HH:mm" : "yyyy-MM-dd HH:mm";
         return dateTime.ToString(format);
     }
 }

@@ -349,6 +349,13 @@ body {
         border-bottom: 1px solid var(--primary-background);
     }
 
+        .history__table td.history__cell--no-logs {
+            width: 24rem;
+            padding: 3rem 0;
+            text-align: center;
+            opacity: .5;
+        }
+
 .history__status-ok {
     background: var(--healthy-background);
 }

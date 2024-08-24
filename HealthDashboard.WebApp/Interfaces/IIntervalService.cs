@@ -1,6 +1,6 @@
 ﻿namespace HealthDashboard.WebApp.Interfaces;
 
-public interface IIntervalService
+internal interface IIntervalService
 {
     public void Start();
     public void Stop();

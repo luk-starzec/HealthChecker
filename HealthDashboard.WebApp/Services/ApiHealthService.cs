@@ -2,7 +2,7 @@
 
 namespace HealthDashboard.WebApp.Services;
 
-public class ApiHealthService : IApiHealthService
+internal sealed class ApiHealthService : IApiHealthService
 {
     public async Task<bool> CheckHealthAsync(string address)
     {
@@ -12,7 +12,7 @@ public class ApiHealthService : IApiHealthService
             var result = await client.GetAsync(address);
             return result.IsSuccessStatusCode;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return false;
         }

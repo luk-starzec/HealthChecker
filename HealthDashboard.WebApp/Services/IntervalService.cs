@@ -3,8 +3,10 @@ using Timer = System.Timers.Timer;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class IntervalService : IIntervalService, IDisposable
+internal sealed class IntervalService : IIntervalService, IDisposable
 {
+    private const int DefaultInterval = 30_000;
+
     private readonly Timer _timer = new();
     private readonly EventBus _eventBus;
 
@@ -14,7 +16,7 @@ public class IntervalService : IIntervalService, IDisposable
 
         _timer = new()
         {
-            Interval = 10_000,
+            Interval = DefaultInterval,
             AutoReset = true,
         };
         _timer.Elapsed += TimerElapsed;
@@ -29,12 +31,14 @@ public class IntervalService : IIntervalService, IDisposable
     public void Start()
     {
         _timer.Start();
+
         _eventBus.OnEnabledChanged?.Invoke(true);
     }
 
     public void Stop()
     {
         _timer.Stop();
+
         _eventBus.OnEnabledChanged?.Invoke(false);
     }
 

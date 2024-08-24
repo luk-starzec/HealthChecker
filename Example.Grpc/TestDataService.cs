@@ -4,7 +4,7 @@ using Shared.Grpc;
 
 namespace Example.Grpc;
 
-public class TestService : ServiceBase<ITestService>, ITestService
+public class TestDataService : ServiceBase<ITestDataService>, ITestDataService
 {
     public UnaryResult<string> GetData()
     {

@@ -1,6 +1,6 @@
 ﻿namespace HealthDashboard.WebApp.Interfaces;
 
-public interface IWcfHealthService 
+internal interface IWcfHealthService 
 {
     bool CheckHealth(string address);
 }

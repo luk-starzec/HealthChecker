@@ -3,7 +3,7 @@ using HealthDashboard.WebApp.ViewModels;
 
 namespace HealthDashboard.WebApp.Interfaces;
 
-public interface IItemService
+internal interface IItemService
 {
     public Task<GroupViewModel[]> GetGroupsAsync();
     public HealthInfo? GetHealthFromHistory(string name);

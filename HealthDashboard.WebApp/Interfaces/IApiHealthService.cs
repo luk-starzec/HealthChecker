@@ -1,6 +1,6 @@
 ﻿namespace HealthDashboard.WebApp.Interfaces;
 
-public interface IApiHealthService
+internal interface IApiHealthService
 {
     Task<bool> CheckHealthAsync(string address);
 }

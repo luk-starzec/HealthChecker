@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 
 namespace HealthDashboard.WebApp.Services;
 
-public class HistoryService : IHistoryService, IDisposable
+internal sealed class HistoryService : IHistoryService, IDisposable
 {
     private readonly ConcurrentDictionary<string, Dictionary<DateTime, bool>> _history = [];
     private readonly EventBus _eventBus;
@@ -31,6 +31,8 @@ public class HistoryService : IHistoryService, IDisposable
             if (history.Count > 15)
                 CleanUpItemLogs(itemName);
         }
+
+        _eventBus.OnHistoryChanged?.Invoke(itemName);
     }
 
     public Dictionary<DateTime, bool> GetLogs(string itemName)
@@ -47,6 +49,8 @@ public class HistoryService : IHistoryService, IDisposable
         {
             logs.Remove(key);
         }
+
+        _eventBus.OnHistoryChanged?.Invoke(itemName);
     }
 
     private void HandleHealthChecked(string name, bool isHealthy, DateTime time)

@@ -3,7 +3,7 @@
 namespace Shared.Wcf
 {
     [ServiceContract]
-    public interface ITestService
+    public interface ITestDataService
     {
         [OperationContract]
         string GetData();

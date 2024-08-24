@@ -11,13 +11,13 @@ namespace Example.Wcf
         {
             var port = GetPort(args);
             var baseAddress = new Uri($"net.tcp://localhost:{port}/TestService");
-            var host = new ServiceHost(typeof(TestService), baseAddress);
+            var host = new ServiceHost(typeof(TestDataService), baseAddress);
 
             try
             {
                 var binding = new NetTcpBinding(SecurityMode.None, false);
-                var ep = host.AddServiceEndpoint(typeof(ITestService), binding, "");
-                var hc = host.AddServiceEndpoint(typeof(IWcfHealthCheck), binding, "hc");
+                host.AddServiceEndpoint(typeof(ITestDataService), binding, "");
+                host.AddServiceEndpoint(typeof(IWcfHealthCheck), binding, "hc");
 
                 host.Open();
                 Console.WriteLine("Service endpoint:");

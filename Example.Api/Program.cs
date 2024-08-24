@@ -10,28 +10,15 @@ builder.Services.AddHealthChecks();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
-
 var arguments = Helpers.GetArguments(args);
 
 // port passed as argument
-if (arguments.ContainsKey("port"))
+if (arguments.TryGetValue("port", out string? value))
 {
-    var port = int.Parse(arguments["port"]);
+    var port = int.Parse(value);
     builder.WebHost.ConfigureKestrel((context, serverOptions) =>
     {
-        serverOptions.Listen(IPAddress.Loopback, port, listenOptions =>
-        {
-            listenOptions.UseHttps();
-        });
+        serverOptions.Listen(IPAddress.Loopback, port, listenOptions => listenOptions.UseHttps());
     });
 }
 
@@ -41,8 +28,6 @@ app.MapHealthChecks("/hc");
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
-app.UseCors();
 
 app.UseHttpsRedirection();
 

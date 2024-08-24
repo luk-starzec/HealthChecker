@@ -2,7 +2,7 @@
 
 namespace Shared.Grpc
 {
-    public interface ITestService : IService<ITestService>
+    public interface ITestDataService : IService<ITestDataService>
     {
         UnaryResult<string> GetData();
     }

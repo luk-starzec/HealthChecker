@@ -17,7 +17,6 @@ builder.Services.AddSingleton<IHealthService, HealthService>();
 builder.Services.AddSingleton<IHistoryService, HistoryService>();
 builder.Services.AddSingleton<IIntervalService, IntervalService>();
 builder.Services.AddSingleton<EventBus>();
-builder.Services.AddHostedService<WatchDogBackgroundService>();
 
 var app = builder.Build();
 
